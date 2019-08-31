@@ -24,9 +24,9 @@ from keras import regularizers
 import os
 
 
-mylist= os.listdir('F:/Speech-Emotion-Analyzer-master/dataset/')
+mylist= os.listdir('F:/Projects/Speech-Emotion-Analyzer-master/dataset/')
 
-data, sampling_rate = librosa.load('F:/Speech-Emotion-Analyzer-master/dataset/03-01-01-01-01-01-01.wav')
+data, sampling_rate = librosa.load('F:/Projects/Speech-Emotion-Analyzer-master/dataset/03-01-02-01-01-01-01.wav')
 plt.figure(figsize=(15, 5))
 librosa.display.waveplot(data, sr=sampling_rate)
 
@@ -52,14 +52,14 @@ for item in mylist:
         feeling_list.append('female_fearful')
     elif item[6:-16]=='06' and int(item[18:-4])%2==1:
         feeling_list.append('male_fearful')
-    elif item[6:-16]=='07' and int(item[18:-4])%2==0:
-        feeling_list.append('female_disgust')
-    elif item[6:-16]=='07' and int(item[18:-4])%2==1:
-        feeling_list.append('male_disgust')
-    elif item[6:-16]=='08' and int(item[18:-4])%2==0:
-        feeling_list.append('female_surprised')
-    elif item[6:-16]=='08' and int(item[18:-4])%2==1:
-        feeling_list.append('male_surprised')
+    elif item[3:4]=='a':
+        feeling_list.append('male_angry')
+    elif item[3:4]=='f':
+        feeling_list.append('male_fearful')
+    elif item[3:4]=='h':
+        feeling_list.append('male_happy')
+    elif item[3:5]=='sa':
+        feeling_list.append('male_sad')        
         
 labels = pd.DataFrame(feeling_list)
 
@@ -68,7 +68,7 @@ df = pd.DataFrame(columns=['feature'])
 bookmark=0
 for index,y in enumerate(mylist):
     if mylist[index][6:-16]!='01':
-        X, sample_rate = librosa.load('F:/Speech-Emotion-Analyzer-master/dataset/'+y, res_type='kaiser_fast',duration=2.5,sr=22050*2,offset=0.5)
+        X, sample_rate = librosa.load('F:/Projects/Speech-Emotion-Analyzer-master/dataset/'+y, res_type='kaiser_fast',duration=2.5,sr=22050*2,offset=0.5)
         sample_rate = np.array(sample_rate)
         mfccs = np.mean(librosa.feature.mfcc(y=X, sr=sample_rate, n_mfcc=13),axis=0)
         feature = mfccs
@@ -91,6 +91,8 @@ newdf1 = np.random.rand(len(rnewdf)) < 0.8
 train = rnewdf[newdf1]
 test = rnewdf[~newdf1]
 
+
+
 train[250:260]
 trainfeatures = train.iloc[:, :-1]
 trainlabel = train.iloc[:, -1:]
@@ -101,17 +103,21 @@ from keras.utils import np_utils
 from sklearn.preprocessing import LabelEncoder
 
 X_train = np.array(trainfeatures)
-y_train = np.array(trainlabel)
+#y_train = np.array(trainlabel)
 X_test = np.array(testfeatures)
-y_test = np.array(testlabel)
+#y_test = np.array(testlabel)
 
 lb = LabelEncoder()
+type(y_train)
 
-y_train = np_utils.to_categorical(lb.fit_transform(y_train))
-y_test = np_utils.to_categorical(lb.fit_transform(y_test))
+y_train = np_utils.to_categorical(lb.fit_transform(trainlabel))
+y_test = np_utils.to_categorical(lb.fit_transform(testlabel))
+
+#y_train=np.array(y_train)
+#y_test=np.array(y_test)
 
 y_train
-X_train.shape
+y_train.shape
 
 x_traincnn =np.expand_dims(X_train, axis=2)
 x_testcnn= np.expand_dims(X_test, axis=2)
@@ -134,7 +140,7 @@ model.add(Dropout(0.2))
 model.add(Conv1D(128, 5,padding='same',))
 model.add(Activation('relu'))
 model.add(Flatten())
-model.add(Dense(14))
+model.add(Dense(10))
 model.add(Activation('softmax'))
 opt = keras.optimizers.rmsprop(lr=0.00001, decay=1e-6)
 
